@@ -1,0 +1,70 @@
+{
+  "name": "Test File",
+  "nodeNumber": 3,
+  "infoList": [
+    {
+      "featureName": "Result 1",
+      "resultsList": [
+        {
+          "locationX": 0,
+          "locationY": 1,
+          "locationZ": 0,
+          "value": 100
+        },
+        {
+          "locationX": 1,
+          "locationY": 1,
+          "locationZ": 0,
+          "value": 50
+        },
+        {
+          "locationX": 0,
+          "locationY": 1,
+          "locationZ": 1,
+          "value": 0
+        },
+        {
+          "locationX": 0,
+          "locationY": 2,
+          "locationZ": 9,
+          "value": 0
+        },
+        {
+          "locationX": 5,
+          "locationY": 2,
+          "locationZ": 3,
+          "value": 0
+        },
+        {
+          "locationX": 3,
+          "locationY": 6,
+          "locationZ": 7,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "featureName": "Result 2",
+      "resultsList": [
+        {
+          "locationX": 0,
+          "locationY": 1,
+          "locationZ": 0,
+          "value": 50
+        },
+        {
+          "locationX": 1,
+          "locationY": 1,
+          "locationZ": 0,
+          "value": 100
+        },
+        {
+          "locationX": 0,
+          "locationY": 1,
+          "locationZ": 1,
+          "value": 20
+        }
+      ]
+    }
+  ]
+}
