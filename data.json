@@ -9,37 +9,37 @@
           "locationX": 0,
           "locationY": 1,
           "locationZ": 0,
-          "value": 100
+          "value": 120
         },
         {
           "locationX": 1,
           "locationY": 1,
           "locationZ": 0,
-          "value": 50
+          "value": 30
         },
         {
           "locationX": 0,
           "locationY": 1,
           "locationZ": 1,
-          "value": 0
+          "value": 47
         },
         {
           "locationX": 0,
           "locationY": 2,
           "locationZ": 9,
-          "value": 0
+          "value": 56
         },
         {
           "locationX": 5,
           "locationY": 2,
           "locationZ": 3,
-          "value": 0
+          "value": 43
         },
         {
           "locationX": 3,
           "locationY": 6,
           "locationZ": 7,
-          "value": 0
+          "value": 22
         }
       ]
     },

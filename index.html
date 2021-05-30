@@ -65,13 +65,33 @@
 
 	// 调试用坐标轴
 	let axes = new THREE.AxesHelper(20);
-	scene.add(axes);
+	// scene.add(axes);
 
+	//初始化顶点集合，顶点数值，数据结构体
 	let vertices = [];
 	let values = [];
 	let loadedData = [];
 
-	await readTextFile("./data.json", function(text){
+	//通过 光线投射Raycaster计算得到的 焦点数据
+	let INTERSECTED;
+	let raycaster = new THREE.Raycaster();
+
+	//鼠标位置
+	let pointer = new THREE.Vector2();
+
+
+	//选中的部分
+
+	document.addEventListener('mousemove', onPointerMove);
+	let mesh = new THREE.Mesh();
+	let highlightObj ;
+	let highlightMtl;
+	let geometry = new THREE.BufferGeometry();
+
+	/**
+	 * 读取json 文件， 需要把data.json修改为动态加载
+	 */
+	readTextFile("./data.json", function(text){
 		loadedData = JSON.parse(text);
 		console.log(loadedData);
 		console.log("Loaded " + (loadedData["infoList"].length).toString() +" sets of data" );
@@ -82,31 +102,41 @@
 					showResult["resultsList"][x]["locationZ"]));
 			values.push(showResult["resultsList"][x]["value"])
 		}
-		// console.log(vertices);
-		// console.log(values);
 		let positions = [];
 		let colors = [];
+		let min = Math.min.apply(null, values);
+		let max = Math.max.apply(null, values);
+		console.log(min,max);
 		for (let i = 0 ; i < vertices.length ; i++){
 			positions.push(vertices[i].x, vertices[i].y , vertices[i].z);
-			colors.push(Math.random(), Math.random(), Math.random());
-			// console.log("add")
+			let color = getColor(values[i],min,max );
+			colors.push(color[0], color[1], color[2]);
 		}
-		console.log(colors);
-		let geometry = new THREE.BufferGeometry();
+		geometry = new THREE.BufferGeometry();
 		geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
 		geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors,3));
-
-		// geometry.computeBoundingSphere();
-		// geometry.setDrawRange(0, vertices.length * 3 );
+		geometry.setIndex([0,1,2,2,3,4]);
 		const material = new THREE.MeshBasicMaterial({vertexColors: THREE.VertexColors , side:THREE.DoubleSide});
+		const highlightMaterial  = new THREE.MeshBasicMaterial({color: 0xff0000, side: THREE.DoubleSide});
+		var materials = [] ;
+		materials.push(material);
+		materials.push(highlightMaterial);
+		console.log(materials);
 
-		const mesh = new THREE.Mesh(geometry, material);
-		scene.add(mesh);
 		console.log(geometry);
+		for (let i = 0 ; i < geometry.index.array.length  ;  i+=3){
+			geometry.addGroup(i,i+3,0);
+		}
+		geometry.groups.forEach(function (face, i) {
+			face.materialIndex = 0; // 初始化为没有选中
+		});
+		mesh = new THREE.Mesh(geometry, materials);
+		scene.add(mesh);
+		console.log(mesh);
 	});
 
 	animate();
-
+	//
 	// renderer.render(scene,camera);
 	//
 	// const dracoLoader = new DRACOLoader();
@@ -131,16 +161,16 @@
 	// 	console.error( e );
 	//
 	// } );
-
-
-	window.onresize = function () {
-
-		camera.aspect = window.innerWidth / window.innerHeight;
-		camera.updateProjectionMatrix();
-
-		renderer.setSize( window.innerWidth, window.innerHeight );
-
-	};
+	//
+	//
+	// window.onresize = function () {
+	//
+	// 	camera.aspect = window.innerWidth / window.innerHeight;
+	// 	camera.updateProjectionMatrix();
+	//
+	// 	renderer.setSize( window.innerWidth, window.innerHeight );
+	//
+	// };
 
 
 	function animate() {
@@ -153,11 +183,13 @@
 
 		stats.update();
 
+
 		renderer.render( scene, camera );
+
 
 	}
 
-	async function readTextFile(file, callback){
+	function readTextFile(file, callback){
 		let rawFile = new XMLHttpRequest();
 		rawFile.overrideMimeType("application/json");
 		rawFile.open("GET", file, true);
@@ -167,6 +199,79 @@
 			}
 		}
 		rawFile.send(null);
+	}
+
+	function getColor(value, min ,max){
+		let relativeValue = (value-min) / (max-min);
+		// 映射颜色 1 -> 红色， 0.5 -> 绿色， 0->蓝色
+		let red, green, blue;
+		if (relativeValue > 0.5){
+			red = (relativeValue - 0.5) / 0.5;
+			blue = 0 ;
+			green = (1-relativeValue) / 0.5;
+		}else{
+			blue = -(relativeValue - 0.5) / 0.5;
+			red = 0 ;
+			green = (relativeValue) / 0.5;
+		}
+		// console.log([red, green, blue]);
+		return [red, green, blue];
+	}
+
+	function onPointerMove(event){
+		pointer.x = (event.clientX / window.innerWidth ) * 2 - 1;
+		// pointer.x = event.clientX ;
+		pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
+		// pointer.y = event.clientY ;
+		// console.log("get x = " + pointer.x.toString() + "  y = " + pointer.y.toString());
+		raycaster.setFromCamera(pointer, camera);
+
+		const intersects = raycaster.intersectObjects(scene.children);
+		// console.log(intersects[0].object);
+		// if (intersects.length > 0 ){
+		// 	let highlight = new THREE.MeshBasicMaterial({color: 'green',side:THREE.DoubleSide});
+		// 	let obj = intersects[0];
+		// 	console.log(obj);
+		// 	// let indexes = obj.object.geometry.index.array;
+		// 	console.log(obj.object.material);
+		// 	obj.object.material = highlight;
+		//
+		// }
+		// scene.remove(mesh);
+		// const material = new THREE.MeshBasicMaterial({vertexColors: THREE.VertexColors , side:THREE.DoubleSide});
+		// mesh = new THREE.Mesh(geometry, material);
+		// scene.add(mesh)；
+		if (intersects.length > 0 ){
+			let obj = intersects[0].object ;
+			console.log(intersects[0])
+			let faceIndex = intersects[0].faceIndex;
+			if (highlightObj !== obj){
+				addHighlight(obj, faceIndex);
+			}
+		}else{
+			removeHighlight();
+		}
+		renderer.render(scene , camera)
+	}
+
+	function addHighlight(obj, faceIndex){
+		if (highlightObj){
+			removeHighlight();
+		}
+
+		const highlightMaterial  = new THREE.MeshBasicMaterial({color: 0xff0000, side: THREE.DoubleSide});
+		highlightObj = obj;
+		highlightMtl = obj.material;
+		obj.material = highlightMaterial;
+
+	}
+
+	function removeHighlight(){
+		if (highlightObj){
+			highlightObj.material = highlightMtl;
+		}
+		highlightObj = null ;
+		highlightMtl = null ;
 	}
 
 
