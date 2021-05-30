@@ -84,7 +84,7 @@
 
 	document.addEventListener('mousemove', onPointerMove);
 	let mesh = new THREE.Mesh();
-	let highlightObj ;
+	let highlightFace ;
 	let highlightMtl;
 	let geometry = new THREE.BufferGeometry();
 
@@ -127,7 +127,7 @@
 		for (let i = 0 ; i < geometry.index.array.length  ;  i+=3){
 			geometry.addGroup(i,i+3,0);
 		}
-		geometry.groups.forEach(function (face, i) {
+		geometry.groups.forEach(function (face) {
 			face.materialIndex = 0; // 初始化为没有选中
 		});
 		mesh = new THREE.Mesh(geometry, materials);
@@ -245,8 +245,9 @@
 			let obj = intersects[0].object ;
 			console.log(intersects[0])
 			let faceIndex = intersects[0].faceIndex;
-			if (highlightObj !== obj){
-				addHighlight(obj, faceIndex);
+			if (highlightFace !== faceIndex){
+				highlightFace = faceIndex;
+				addHighlight(intersects[0], faceIndex);
 			}
 		}else{
 			removeHighlight();
@@ -255,22 +256,30 @@
 	}
 
 	function addHighlight(obj, faceIndex){
-		if (highlightObj){
+		if (highlightFace !== null){
 			removeHighlight();
 		}
 
+		/*
 		const highlightMaterial  = new THREE.MeshBasicMaterial({color: 0xff0000, side: THREE.DoubleSide});
 		highlightObj = obj;
 		highlightMtl = obj.material;
 		obj.material = highlightMaterial;
-
+		*/
+		highlightFace = faceIndex;
+		// console.log(obj.face);
+		obj.object.geometry.groups[obj.faceIndex].materialIndex = 1;
+		obj.object.geometry.groupsNeedUpdate = true;
+		// obj.object.material.needsUpdate = true;
+		console.log(obj);
 	}
 
 	function removeHighlight(){
-		if (highlightObj){
-			highlightObj.material = highlightMtl;
+		if (highlightFace!== null){
+			geometry.groups[highlightFace].materialIndex = 0;
+
 		}
-		highlightObj = null ;
+		highlightFace = null ;
 		highlightMtl = null ;
 	}
 
