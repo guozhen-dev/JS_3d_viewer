@@ -6,7 +6,7 @@
       "featureName": "Result 1",
       "resultsList": [
         {
-          "locationX": 0,
+          "locationX": 12,
           "locationY": 1,
           "locationZ": 0,
           "value": 120
@@ -21,7 +21,7 @@
           "locationX": 0,
           "locationY": 1,
           "locationZ": 1,
-          "value": 47
+          "value": 500
         },
         {
           "locationX": 0,
@@ -33,7 +33,7 @@
           "locationX": 5,
           "locationY": 2,
           "locationZ": 3,
-          "value": 43
+          "value": -5
         },
         {
           "locationX": 3,
