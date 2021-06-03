@@ -59,78 +59,96 @@ let pointer = new THREE.Vector2();
 
 //选中的部分
 
-document.addEventListener('mousemove', onPointerMove);
+document.addEventListener('click', onPointerMove);
+document.addEventListener('keypress', kbdHandler);
+
 let mesh = new THREE.Mesh();
 let highlightFace ;
 let highlightMtl;
 let geometry = new THREE.BufferGeometry();
-
+let loadedMesh ;
+let meshMask = []  ;
+let sceneDB=[];
+let uuid_list = {} ;
 /**
  * 读取json 文件， 需要把data.json修改为动态加载
- */
-readTextFile("./data.json", function(text){
-    loadedData = JSON.parse(text);
-    console.log(loadedData);
-    console.log("Loaded " + (loadedData["infoList"].length).toString() +" sets of data" );
-    const showResult = loadedData["infoList"][0]
-    for( let x = 0 ; x < showResult["resultsList"].length ; x++){
-        vertices.push(new THREE.Vector3(showResult["resultsList"][x]["locationX"],
-            showResult["resultsList"][x]["locationY"],
-            showResult["resultsList"][x]["locationZ"]));
-        values.push(showResult["resultsList"][x]["value"])
-    }
-    let positions = [];
-    let colors = [];
-    let min = Math.min.apply(null, values);
-    let max = Math.max.apply(null, values);
-    console.log(min,max);
-    for (let i = 0 ; i < vertices.length ; i++){
-        positions.push(vertices[i].x, vertices[i].y , vertices[i].z);
-        let color = getColor(values[i],min,max );
-        colors.push(color[0], color[1], color[2]);
-    }
-    geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors,3));
-    geometry.setIndex([0,1,2,1,2,3]);
-    const material = new THREE.MeshBasicMaterial({vertexColors: THREE.VertexColors , side:THREE.DoubleSide});
-    const highlightMaterial  = new THREE.MeshBasicMaterial({color: 0xff0000, side: THREE.DoubleSide});
-    var materials = [] ;
-    materials.push(material);
-    // materials.push(null);
-    materials.push(highlightMaterial);
-    console.log(materials);
+ //  */
+// readTextFile("./data.json", function(text){
+//     loadedData = JSON.parse(text);
+//     console.log(loadedData);
+//     console.log("Loaded " + (loadedData["infoList"].length).toString() +" sets of data" );
+//     const showResult = loadedData["infoList"][0]
+//     for( let x = 0 ; x < showResult["resultsList"].length ; x++){
+//         vertices.push(new THREE.Vector3(showResult["resultsList"][x]["locationX"],
+//             showResult["resultsList"][x]["locationY"],
+//             showResult["resultsList"][x]["locationZ"]));
+//         values.push(showResult["resultsList"][x]["value"])
+//     }
+//     let positions = [];
+//     let colors = [];
+//     let min = Math.min.apply(null, values);
+//     let max = Math.max.apply(null, values);
+//     console.log(min,max);
+//     for (let i = 0 ; i < vertices.length ; i++){
+//         positions.push(vertices[i].x, vertices[i].y , vertices[i].z);
+//         let color = getColor(values[i],min,max );
+//         colors.push(color[0], color[1], color[2]);
+//     }
+//     geometry = new THREE.BufferGeometry();
+//     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+//     geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors,3));
+//     geometry.setIndex([0,1,2,1,2,3]);
+//     const material = new THREE.MeshBasicMaterial({vertexColors: THREE.VertexColors , side:THREE.DoubleSide});
+//     const highlightMaterial  = new THREE.MeshBasicMaterial({color: 0xff0000, side: THREE.DoubleSide});
+//     var materials = [] ;
+//     materials.push(material);
+//     // materials.push(null);
+//     materials.push(highlightMaterial);
+//     console.log(materials);
+//
+//     console.log(geometry);
+//     for (let i = 0 ; i < geometry.index.array.length  ;  i+=3){
+//         geometry.addGroup(i,i+3,0);
+//     }
+//     geometry.groups.forEach(function (face) {
+//         face.materialIndex = 0; // 初始化为没有选中
+//     });
+//     mesh = new THREE.Mesh(geometry, materials);
+//     scene.add(mesh);
+//     console.log(mesh);
+// });
 
-    console.log(geometry);
-    for (let i = 0 ; i < geometry.index.array.length  ;  i+=3){
-        geometry.addGroup(i,i+3,0);
-    }
-    geometry.groups.forEach(function (face) {
-        face.materialIndex = 0; // 初始化为没有选中
-    });
-    mesh = new THREE.Mesh(geometry, materials);
-    scene.add(mesh);
-    console.log(mesh);
-});
 
-readTextFile('/jason.obj', function(text){
+
+
+readTextFile('/3dv/jason.obj', function(text){
     // console.log(text);
     const objLoader = new OBJLoader();
     const loaded = objLoader.parse(text);
     console.log(loaded.children);
-    const loadedMesh = loaded.children[1];
-    console.log(loadedMesh);
+    loadedMesh = loaded.children;
+    for (let i = 0 ; i < loaded.children.length ; i++) {
+        const listDOM = document.getElementById('switch');
+        const item = document.createElement("div");
+        item.textContent = loadedMesh[i].name;
+        item.id = "Mesh_" + i.toString();
+        item.className = "listItem";
+        item.title = item.textContent;
+        item.onclick = function (){
+            changeOnOff(item.id);
+        };
+        listDOM.appendChild(item)
+        meshMask.push(true);
+    }
+    onMeshChange();
+
 });
 // const objLoader = new OBJLoader();
-// const mtlLoader = new MTLLoader();
-// mtlLoader.load('./jason.mtl', function(material){
-// 	objLoader.setMaterials(material);
-// 	objLoader.load('./jason.obj', function(object){
-// 		scene.add(object);
-//
-// 		console.log("loaded");
-// 		console.log(objLoader);
-// 	});
+// objLoader.setMaterials(material);
+// objLoader.load('/jason.obj', function(object){
+//     scene.add(object);
+//     console.log("loaded");
+//     console.log(objLoader);
 // });
 
 
@@ -230,7 +248,6 @@ function onPointerMove(event){
     raycaster.setFromCamera(pointer, camera);
 
     const intersects = raycaster.intersectObjects(scene.children);
-    console.log(intersects);
     // console.log(intersects[0].object);
     // if (intersects.length > 0 ){
     // 	let highlight = new THREE.MeshBasicMaterial({color: 'green',side:THREE.DoubleSide});
@@ -248,10 +265,11 @@ function onPointerMove(event){
     if (intersects.length > 0 ){
         let obj = intersects[0].object ;
         // console.log(intersects[0])
-        let faceIndex = intersects[0].faceIndex;
+        console.log(uuid_list[intersects[0].object.uuid]);
+        let faceIndex = uuid_list[intersects[0].object.uuid];
         if (highlightFace !== faceIndex){
-            //highlightFace = faceIndex;
-            addHighlight(intersects[0], faceIndex);
+            // highlightFace = faceIndex;
+            addHighlight(faceIndex);
         }
     }else{
         removeHighlight();
@@ -259,7 +277,7 @@ function onPointerMove(event){
     renderer.render(scene , camera)
 }
 
-function addHighlight(obj, faceIndex){
+function addHighlight( faceIndex){
     if (highlightFace !== null){
         removeHighlight();
     }
@@ -272,20 +290,67 @@ function addHighlight(obj, faceIndex){
     */
     highlightFace = faceIndex;
     // console.log(obj.face);
-    obj.object.geometry.groups[obj.faceIndex].materialIndex = 1;
-    obj.object.geometry.groupsNeedUpdate = true;
+    // obj.object.geometry.groups[obj.faceIndex].materialIndex = 1;
+    // obj.object.geometry.groupsNeedUpdate = true;
     // obj.object.material.needsUpdate = true;
+    let domItem = document.getElementById('Mesh_'+faceIndex.toString());
+    domItem.className = 'HLTItem';
 }
 
 function removeHighlight(){
     if (highlightFace != null){
         console.log(highlightFace);
-        geometry.groups[highlightFace].materialIndex = 0;
-
+        // geometry.groups[highlightFace].materialIndex = 0;
+        let domItem = document.getElementById('Mesh_'+highlightFace.toString());
+        domItem.className = 'listItem';
     }
     highlightFace = null ;
     highlightMtl = null ;
 }
 
+function changeOnOff(id){
+    id = parseInt(id.replace(/[^0-9]/ig,""));
+    console.log(id);
+    meshMask[id] = !meshMask[id];
+    if(meshMask[id]){
+        scene.add(sceneDB[id]);
+    }else{
+        scene.remove(sceneDB[id]);
+    }
+}
 
+function onMeshChange(){
+    while(sceneDB.length){
+        scene.remove(sceneDB[0]);
+        sceneDB.pop();
+    }
+    for(let index = 0 ; index < loadedMesh.length ; index++) {
+        console.log(meshMask);
+        if (!meshMask[index]) continue;
+        const thisMesh = loadedMesh[index];
+        const loadedGeometry = thisMesh.geometry;
+        const vertexNumber = loadedGeometry.attributes.position.count;
+        console.log(vertexNumber);
+        readTextFile('/3dv/test.json', function (text) {
+            const values = JSON.parse(text);
+            let colorsList = [];
+            console.log(values['results'][0]['values']);
+            for (let i = 0; i < vertexNumber; i++) {
+                let tempColor = getColor(values['results'][0]['values'][Math.floor(Math.random() * vertexNumber)], -100, 100);
+                colorsList.push(tempColor[0], tempColor[1], tempColor[2]);
+            }
+            console.log(colorsList);
+            loadedGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colorsList, 3))
+            const loadedMaterial = new THREE.MeshBasicMaterial({vertexColors: THREE.VertexColors});
+            const newMesh = new THREE.Mesh(loadedGeometry, loadedMaterial);
+            console.log(newMesh);
+            sceneDB.push(newMesh);
+            scene.add(newMesh);
+            uuid_list[newMesh.uuid] = index;
+        })
+    }
+}
 
+function kbdHandler(e){
+    onMeshChange() ;
+}

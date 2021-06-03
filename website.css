@@ -1,0 +1,40 @@
+body {
+    background-color: #FFFFFF;
+    color: #000;
+}
+
+a {
+    color: #2983ff;
+}
+
+.webpage{
+    /*flex布局（作用于容器）*/
+    display: flex;
+
+    /*项目拉伸对齐，也就是所左边的高度为拉伸到和右边底部对齐*/
+    align-items: flex-end;
+}
+
+.left_menu{
+    float: left;
+}
+
+.main{
+    margin: 0 10px;
+    width: auto;
+    height: 200px;
+    background: #F7E8B4;
+
+    /*空白区域分配比例为1（作用于项目）
+    左右得到的空白比例为0:1，所以右边会分配到剩余的所有空白区域，
+    左边成固定的宽度，右边为自适应宽度*/
+    flex-grow: 1;
+}
+
+.listItem{
+    cursor: pointer;
+}
+.HLTItem{
+    cursor: pointer;
+    background: red;
+}
